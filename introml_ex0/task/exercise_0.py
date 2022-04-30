@@ -9,7 +9,10 @@ import matplotlib.pyplot as plt
 #    3 3 3 4 5 6 6 6
 # Note that the input array must not be modified.
 def clip(array, minimum, maximum):
-    return
+    a = array
+    a = np.where(a < minimum, minimum, a)
+    a = np.where(a > maximum, maximum, a)
+    return a
 
 
 if __name__ == '__main__':
