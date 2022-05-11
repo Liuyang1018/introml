@@ -28,25 +28,25 @@ def compute_frequency(signal, min_freq=20):
 if __name__ == '__main__':
     # Implement the code to answer the questions here
     A2 = load_sample(os.path.join('sounds', 'Piano.ff.A2.npy'))
-  print('recorded A2:', compute_frequency(A2), '  A2:110.0000')
+    print('recorded A2:', compute_frequency(A2), '  A2:110.0000')
 
-  A3 = load_sample(os.path.join('sounds', 'Piano.ff.A3.npy'))
-  print('recorded A3:', compute_frequency(A3), '  A3:220.0000')
+    A3 = load_sample(os.path.join('sounds', 'Piano.ff.A3.npy'))
+    print('recorded A3:', compute_frequency(A3), '  A3:220.0000')
 
-  A4 = load_sample(os.path.join('sounds', 'Piano.ff.A4.npy'))
-  print('recorded A4:', compute_frequency(A4), '  A4:440.0000')
+    A4 = load_sample(os.path.join('sounds', 'Piano.ff.A4.npy'))
+    print('recorded A4:', compute_frequency(A4), '  A4:440.0000')
 
-  A5 = load_sample(os.path.join('sounds', 'Piano.ff.A5.npy'))
-  print('recorded A5:', compute_frequency(A5), '  A5:880.0000')
+    A5 = load_sample(os.path.join('sounds', 'Piano.ff.A5.npy'))
+    print('recorded A5:', compute_frequency(A5), '  A5:880.0000')
 
-  A6 = load_sample(os.path.join('sounds', 'Piano.ff.A6.npy'))
-  print('recorded A6:', compute_frequency(A6), '  A6:1760.000')
+    A6 = load_sample(os.path.join('sounds', 'Piano.ff.A6.npy'))
+    print('recorded A6:', compute_frequency(A6), '  A6:1760.000')
 
-  A7 = load_sample(os.path.join('sounds', 'Piano.ff.A7.npy'))
-  print('recorded A7:', compute_frequency(A7), '  A7:3520.000')
+    A7 = load_sample(os.path.join('sounds', 'Piano.ff.A7.npy'))
+    print('recorded A7:', compute_frequency(A7), '  A7:3520.000')
 
-  signal = load_sample(os.path.join('sounds', 'Piano.ff.XX.npy'))
-  print('XX:',compute_frequency(signal))  # 1179.878
+    signal = load_sample(os.path.join('sounds', 'Piano.ff.XX.npy'))
+    print('XX:',compute_frequency(signal))  # 1179.878
     # XX is D6? (1174)
 # This will be helpful:
 # https://en.wikipedia.org/wiki/Piano_key_frequencies
