@@ -27,8 +27,34 @@ def compute_frequency(signal, min_freq=20):
 
 if __name__ == '__main__':
     # Implement the code to answer the questions here
+
+    signal = load_sample(os.path.join('sounds', 'Piano.ff.A2.npy'))
+    print(compute_frequency(signal))  # 109.587  ==> A2 == 110
+
+    signal = load_sample(os.path.join('sounds', 'Piano.ff.A3.npy'))
+    print(compute_frequency(signal))  # 220.342 ==> A3 == 220
+
+    signal = load_sample(os.path.join('sounds', 'Piano.ff.A4.npy'))
+    print(compute_frequency(signal))  # 440.75 ==> A4 == 440
+
+    signal = load_sample(os.path.join('sounds', 'Piano.ff.A5.npy'))
+    print(compute_frequency(signal))  # 883.5 ==> A5 == 880
+
+    signal = load_sample(os.path.join('sounds', 'Piano.ff.A6.npy'))
+    print(compute_frequency(signal))  # 1776.266  ==> A6 == 1760
+
+    signal = load_sample(os.path.join('sounds', 'Piano.ff.A7.npy'))
+    print(compute_frequency(signal))  # 3610.251 ==> A7 == 3520
+
     signal = load_sample(os.path.join('sounds', 'Piano.ff.XX.npy'))
     print(compute_frequency(signal))  # 1179.878
-    # XX is D6? (1174)
+    # XX is D6? (1174), because 883.5 < 1179.878 < 1760
+    # ==> note is between A5 and A6, smaller frequency offset than for A6
+
+    # Alice can recognize notes with low frequencies.
+    # But she cannot correctly evaluate the notes with higher frequencies.
+    # She recognizes notes with high frequencies as a lower one.
+    # (e.g. A7: She set a 3610 and think it is 3520)
+
 # This will be helpful:
 # https://en.wikipedia.org/wiki/Piano_key_frequencies
