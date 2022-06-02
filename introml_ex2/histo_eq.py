@@ -30,7 +30,10 @@ for i in range(256):
 print(np.sum(Cx[:90]) - 0.001974977 < 0.000000001)
 
 # change the gray value of each pixel
-Cmin = Cx[np.argmin(Cx)]
+# Cmin should be the smallest non-zero value of Cx.
+# Cx has max. value 1, set 0 in Cx into 2, so that zero value will be ignored by np.argmin
+Cmin = Cx[np.argmin(np.where(Cx != 0, Cx, 2))]
+print(Cmin)
 new_pixelvalue = np.floor((Cx - Cmin) / (1 - Cmin) * 255)
 new_image = np.zeros(len(img_array)) + img_array
 for i in range(256):
