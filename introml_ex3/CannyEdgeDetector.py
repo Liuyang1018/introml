@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import convolve
-
+import convo
 
 #
 # NO MORE MODULES ALLOWED
@@ -17,7 +17,8 @@ def gaussFilter(img_in, ksize, sigma):
     :return: (kernel, filtered) kernel and gaussian filtered image (both np.ndarray)
     """
     # TODO
-    pass
+    k = convo.make_kernel(ksize, sigma)
+    return k, convolve(img_in, k, output=int)  # I don't understand, why int?
 
 
 def sobel(img_in):
@@ -29,7 +30,12 @@ def sobel(img_in):
     :return: gx, gy - sobel filtered images in x- and y-direction (np.ndarray, np.ndarray)
     """
     # TODO
-    pass
+    # sobel filters
+    g_x = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]]
+    g_y = np.rot90(g_x)
+    print(g_y)  # I don't understand the flip here... It seems to be upside-down, but not 180 grad???
+    # return sobel filtered images in x- and y-direction
+    return convolve(img_in, g_x, output=int), convolve(img_in, g_y, output=int)
 
 
 def gradientAndDirection(gx, gy):
@@ -40,7 +46,9 @@ def gradientAndDirection(gx, gy):
     :return: g, theta (np.ndarray, np.ndarray)
     """
     # TODO
-    pass
+    g = np.sqrt(gx ** 2 + gy ** 2)
+    theta = np.arctan2(gy, gx)
+    return g.astype(np.int), theta
 
 
 def convertAngle(angle):
