@@ -33,7 +33,7 @@ def sobel(img_in):
     # sobel filters
     g_x = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]]
     g_y = np.rot90(g_x)
-    print(g_y)  # I don't understand the flip here... It seems to be upside-down, but not 180 grad???
+    print(g_y)  # Q: I don't understand the flip here... It seems to be upside-down, but not 180 grad???
     # return sobel filtered images in x- and y-direction
     return convolve(img_in, g_x, output=int), convolve(img_in, g_y, output=int)
 
@@ -58,7 +58,15 @@ def convertAngle(angle):
     :return: nearest match of {0, 45, 90, 135}
     """
     # TODO
-    pass
+    grad = (angle / 2 / np.pi * 360) % 180
+    if (grad >= 112.5) and (grad < 157.5):
+        return 135
+    elif (grad >= 77.5) and (grad < 112.5):
+        return 90
+    elif (grad >= 22.5) and (grad < 77.5):
+        return 45
+    else:
+        return 0
 
 
 def maxSuppress(g, theta):
@@ -69,7 +77,25 @@ def maxSuppress(g, theta):
     :return: max_sup (np.ndarray)
     """
     # TODO Hint: For 2.3.1 and 2 use the helper method above
-    pass
+    max_sup = np.zeros(g.shape)
+    im_shape = theta.shape
+    for i in range(1, im_shape[0] - 1):
+        for j in range(1, im_shape[1] - 1):
+            angle = convertAngle(theta[i][j])
+            # Q: Example in the exercise sheet is wrong? angle == 0 checks left and right, == 90 checks up and down
+            if angle == 0:
+                if (g[i][j] >= g[i][j+1]) and (g[i][j] >= g[i][j-1]):
+                    max_sup[i][j] = g[i][j]
+            elif angle == 45:
+                if (g[i][j] >= g[i+1][j-1]) and (g[i][j] >= g[i-1][j+1]):
+                    max_sup[i][j] = g[i][j]
+            if angle == 90:
+                if (g[i][j] >= g[i+1][j]) and (g[i][j] >= g[i-1][j]):
+                    max_sup[i][j] = g[i][j]
+            if angle == 135:
+                if (g[i][j] >= g[i+1][j+1]) and (g[i][j] >= g[i-1][j-1]):
+                    max_sup[i][j] = g[i][j]
+    return max_sup
 
 
 def hysteris(max_sup, t_low, t_high):
@@ -84,7 +110,17 @@ def hysteris(max_sup, t_low, t_high):
     :return: hysteris thresholded image (np.ndarray)
     """
     # TODO
-    pass
+    threshimg = np.ones(max_sup.shape)
+    threshimg = np.where(max_sup <= t_low, 0, threshimg)
+    threshimg = np.where(max_sup > t_high, 2, threshimg)
+    padded = np.pad(threshimg, ((1, 1), (1, 1)))
+
+    for i in range(1, padded.shape[0]-1):
+        for j in range(1, padded.shape[1]-1):
+            if padded[i][j] == 2:
+                padded[i-1:i+2, j-1:j+2] = np.where(padded[i-1:i+2, j-1:j+2] == 1, 255, padded[i-1:i+2, j-1:j+2])
+                padded[i][j] = 255
+    return padded[1:padded.shape[0], 1:padded.shape[1]]
 
 
 def canny(img):
