@@ -4,20 +4,40 @@ import numpy as np
 
 def make_kernel(ksize, sigma):
     # implement the Gaussian kernel here
-    kernel = np.zeros([ksize, ksize])
-    center = ksize // 2
-
-    for i in range(ksize):
-        for j in range(ksize):
-            x = i - center
-            y = j - center
-            # the constant (1/(2 * np.pi * sigma**2)) will be cancelled out in the following nomalizing process
-            kernel[i][j] = (np.exp(-0.5 / (sigma ** 2) * (x ** 2 + y ** 2)))
-
-    # nomalize kernel
-    sum_value = np.sum(kernel)
-    kernel = kernel / sum_value
-
+    kernel = np.zeros((ksize, ksize))
+    middle = ksize // 2
+    mini_mask = np.zeros((middle + 1, middle + 1))
+    odd = True
+    if ksize % 2 == 0:
+        odd = False
+    coeff = 1 / (2 * np.pi * sigma * sigma)
+    for i in range(0, middle + 1):
+        for j in range(i, middle + 1):
+            x = middle - i
+            y = middle - j
+            mini_mask[i][j] = coeff * np.exp(-(x ** 2 + y ** 2) / (2 * sigma ** 2))
+            mini_mask[j][i] = mini_mask[i][j]
+    bottom_left = np.flip(mini_mask, 0)
+    upper_right = np.flip(mini_mask, 1)
+    bottom_right = np.flip(mini_mask)
+    kernel[0:middle + 1, 0:middle + 1] = mini_mask
+    if odd:
+        kernel[middle:, 0:middle + 1] = bottom_left
+        kernel[0:middle + 1, middle:] = upper_right
+        kernel[middle:, middle:] = bottom_right
+    else:
+        kernel[middle:, 0:middle + 1] = bottom_left[:middle, :]
+        kernel[0:middle + 1, middle:] = upper_right[:, :middle]
+        kernel[middle:, middle:] = bottom_right[:middle, :middle]
+    """alternative, use for-loop to calculate the whole kernel:
+    kernel = np.zeros((ksize, ksize))
+    for i in range(0, ksize):
+        for j in range(0, ksize):
+            x = i - middle
+            y = j - middle
+            kernel[i][j] = coeff * np.exp(-(x ** 2 + y ** 2) / (2 * sigma ** 2))
+    """
+    kernel = kernel / np.sum(kernel.flatten())
     return kernel
 
 
