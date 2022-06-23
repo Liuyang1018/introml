@@ -33,7 +33,22 @@ def binarizeAndSmooth(img) -> np.ndarray:
     :param img: greyscale image in range [0, 255]
     :return: preprocessed image
     '''
-    pass
+    # Use a threshold alpha, to convert an original gray image into a binary map
+    alpha = 115
+    IBinaryMap = (img < alpha) * 1
+    # Alternative: Use cv2.threshold() to create a mask with value {0, 255}
+    # _, IBinaryMask = cv2.threshold(img, alpha-1, 255, cv2.THRESH_BINARY_INV)
+
+    # Smooth the binary map by a Gaussian filter
+    ksize = 5
+    kernel = cv2.getGaussianKernel(ksize, ksize/3)
+    Gaussian_kernel = kernel @ kernel.T
+    ISmoothedMap = IBinaryMap * Gaussian_kernel * 255
+    # Alternative: Use the {0, 255} mask to calculate the smoothed map
+    # ISmoothedMap = IBinaryMask * Gaussian_kernel
+
+    return ISmoothedMap
+
 
 
 def drawLargestContour(img) -> np.ndarray:
@@ -42,7 +57,21 @@ def drawLargestContour(img) -> np.ndarray:
     :param img: preprocessed image (mostly b&w)
     :return: contour image
     '''
-    pass
+    contours, _ = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    contour_img = np.zeros(img.shape)
+    list(contours).sort(key=lambda c: cv2.arcLength(c, True), reverse=True)
+    cv2.drawContours(contour_img, contours, 0, 255, 2)
+    '''
+    # Alternative: use for-loop
+    # Alternative: use contourArea() to find the largest contour
+    area = []
+    for i in range(len(contours)):
+        area.append(cv2.contourArea(contours[i]))
+    max_idx = np.argmax(np.array(area))
+    cv2.drawContours(contour_img, contours, max_idx, 255, 2)
+    '''
+
+    return contour_img
 
 
 def getFingerContourIntersections(contour_img, x) -> np.ndarray:
