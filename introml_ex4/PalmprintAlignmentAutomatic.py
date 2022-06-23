@@ -82,7 +82,29 @@ def getFingerContourIntersections(contour_img, x) -> np.ndarray:
     :param x: position of the image column to run along
     :return: y-values in np.ndarray in shape (6,)
     '''
-    pass
+    y = []
+    is_image = False
+    before = 255
+    length_counter = 0
+    for i in range(len(contour_img)):
+        if contour_img[i, x] == 255 and contour_img[i, x] == before:  # white unchanged
+            if not is_image:  # check board
+                continue
+            else:  # in case not board, then it is contour
+                length_counter = length_counter + 1  # calculate the width of white
+        elif contour_img[i, x] == 0 and contour_img[i, x] != before: # from white to black
+            before = contour_img[i, x]
+            if not is_image:  # except board
+                continue
+            else:
+                y.append(i-(length_counter+1)//2)  # save the middle point in last white as y
+        elif contour_img[i, x] == 255 and contour_img[i, x] != before:  # from black to white
+            is_image = True
+            length_counter = 1
+            before = contour_img[i, x]
+        # in case black to black, do nothing
+
+    return np.array(y[:6])  # Q: really the first 6 ones should be chosen? what if the board is at the beginning???
 
 
 def findKPoints(img, y1, x1, y2, x2) -> tuple:
