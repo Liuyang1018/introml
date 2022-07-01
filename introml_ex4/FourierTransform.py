@@ -19,7 +19,7 @@ def polarToKart(shape, r, theta):
     :param theta: angle
     :return: y, x
     '''
-    pass
+    return int(shape[0] / 2 + r * np.sin(theta)), int(shape[1] / 2 + r * np.cos(theta))
 
 
 def calculateMagnitudeSpectrum(img) -> np.ndarray:
@@ -29,7 +29,14 @@ def calculateMagnitudeSpectrum(img) -> np.ndarray:
     :param img:
     :return:
     '''
-    pass
+    f = np.fft.fft2(img)
+    shifted = np.abs(np.fft.fftshift(f))
+    print(np.max(np.abs(f)))
+    # Reset the shifted image back into interval [0, 255]
+    shifted_min = np.min(shifted)
+    shifted_max = np.max(shifted)
+    result = 255 / (shifted_max - shifted_min + np.finfo(float).eps) * (shifted - shifted_min)
+    return result
 
 
 def extractRingFeatures(magnitude_spectrum, k, sampling_steps) -> np.ndarray:
@@ -40,7 +47,13 @@ def extractRingFeatures(magnitude_spectrum, k, sampling_steps) -> np.ndarray:
     :param sampling_steps: times to sample one ring
     :return: feature vector of k features
     '''
-    pass
+    features = np.zeros(k)
+    for i in range(1, k + 1):
+        for theta in np.linspace(0, np.pi, sampling_steps):
+            for r in range(k * (i - 1), k * i + 1):
+                y, x = polarToKart(magnitude_spectrum.shape, r, theta)
+                features[i-1] = features[i-1] + magnitude_spectrum[y, x]
+    return features
 
 
 def extractFanFeatures(magnitude_spectrum, k, sampling_steps) -> np.ndarray:
@@ -53,7 +66,13 @@ def extractFanFeatures(magnitude_spectrum, k, sampling_steps) -> np.ndarray:
     :param sampling_steps: number of rays to sample from in one fan-like area
     :return: feature vector of length k
     """
-    pass
+    features = np.zeros(k)
+    for i in range(1, k + 1):
+        for theta in np.linspace(i-1, i, sampling_steps):
+            for r in range(0, k*k+1):
+                y, x = polarToKart(magnitude_spectrum.shape, r, theta * np.pi / k)
+                features[i-1] = features[i-1] + magnitude_spectrum[y, x]
+    return features
 
 
 def calcuateFourierParameters(img, k, sampling_steps) -> (np.ndarray, np.ndarray):
@@ -64,4 +83,7 @@ def calcuateFourierParameters(img, k, sampling_steps) -> (np.ndarray, np.ndarray
     :param sampling_steps: number of samples to accumulate for each feature
     :return: R, T feature vectors of length k
     '''
-    pass
+    magnitude_spectrum = calculateMagnitudeSpectrum(img)
+    R = extractRingFeatures(magnitude_spectrum, k, sampling_steps)
+    T = extractFanFeatures(magnitude_spectrum, k, sampling_steps)
+    return R, T
