@@ -33,10 +33,11 @@ def calculateMagnitudeSpectrum(img) -> np.ndarray:
     shifted = np.abs(np.fft.fftshift(f))
     print(np.max(np.abs(f)))
     # Reset the shifted image back into interval [0, 255]
-    shifted_min = np.min(shifted)
-    shifted_max = np.max(shifted)
-    result = 255 / (shifted_max - shifted_min + np.finfo(float).eps) * (shifted - shifted_min)
-    return result
+    #shifted_min = np.min(shifted)
+    #shifted_max = np.max(shifted)
+    #result = 255 / (shifted_max - shifted_min + np.finfo(float).eps) * (shifted - shifted_min)
+    #return result.astype(int)
+    return (20*np.log10(np.finfo(float).eps + np.abs(shifted))).astype(int)  # Any other alternative form?
 
 
 def extractRingFeatures(magnitude_spectrum, k, sampling_steps) -> np.ndarray:
@@ -53,6 +54,7 @@ def extractRingFeatures(magnitude_spectrum, k, sampling_steps) -> np.ndarray:
             for r in range(k * (i - 1), k * i + 1):
                 y, x = polarToKart(magnitude_spectrum.shape, r, theta)
                 features[i-1] = features[i-1] + magnitude_spectrum[y, x]
+    print(features)
     return features
 
 
@@ -67,11 +69,13 @@ def extractFanFeatures(magnitude_spectrum, k, sampling_steps) -> np.ndarray:
     :return: feature vector of length k
     """
     features = np.zeros(k)
+    b, a = magnitude_spectrum.shape
     for i in range(1, k + 1):
         for theta in np.linspace(i-1, i, sampling_steps):
-            for r in range(0, k*k+1):
+            for r in range(0, int(min(a, b)/2)-1):  # Why min(a,b)/2-1, why -1 ????
                 y, x = polarToKart(magnitude_spectrum.shape, r, theta * np.pi / k)
                 features[i-1] = features[i-1] + magnitude_spectrum[y, x]
+    print(features)
     return features
 
 

@@ -16,7 +16,8 @@ def calculate_R_Distance(Rx, Ry):
     :param Ry: Ring features of Person Y
     :return: Similiarity index of the two feature vectors
     '''
-    pass
+    DRxy = 1 / len(Rx) * np.sum(np.abs(Rx - Ry))
+    return DRxy
 
 
 def calculate_Theta_Distance(Thetax, Thetay):
@@ -26,4 +27,11 @@ def calculate_Theta_Distance(Thetax, Thetay):
     :param Thetay: Fan features of Person Y
     :return: Similiarity index of the two feature vectors
     '''
-    pass
+    k = len(Thetax)
+    xx = Thetax - 1 / k * np.sum(Thetax)
+    yy = Thetay - 1 / k * np.sum(Thetay)
+    lxy = np.sum(xx * yy)
+    lxx = np.sum(xx ** 2)
+    lyy = np.sum(yy ** 2)
+    DThetaxy = (1 - lxy * lxy / (lxx * lyy)) * 100
+    return DThetaxy

@@ -37,8 +37,12 @@ def binarizeAndSmooth(img) -> np.ndarray:
     # Use a threshold alpha, to convert an original gray image into a binary map
     alpha = 115
     IBinaryMap = (img > alpha) * np.float64(255)
-    print(type(img[0,0]))
-    print(type(IBinaryMap[0,0]))
+    for i in range(IBinaryMap.shape[0]):
+        for j in range(IBinaryMap.shape[1]):
+            if IBinaryMap[i, j] != 0 and IBinaryMap[i, j] != 255:
+                print("BINARY WRONG!!!!!!")
+    print(type(img[0, 0]))
+    print(type(IBinaryMap[0, 0]))
     # Alternative: Use cv2.threshold() to create a mask with value {0, 255}
     # _, IBinaryMask = cv2.threshold(img, alpha-1, 255, cv2.THRESH_BINARY_INV)
 
@@ -55,8 +59,10 @@ def drawLargestContour(img) -> np.ndarray:
     :param img: preprocessed image (mostly b&w)
     :return: contour image
     '''
+    plt.imshow(img, 'gray')
+    plt.show()
     img = img.astype(np.uint8)
-    contours, _ = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    contours, _ = cv2.findContours(img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
     contour_img = np.zeros(img.shape)
     list(contours).sort(key=lambda c: cv2.arcLength(c, True), reverse=True)
     cv2.drawContours(contour_img, contours, 0, 255, 2)
@@ -70,6 +76,7 @@ def drawLargestContour(img) -> np.ndarray:
     cv2.drawContours(contour_img, contours, max_idx, 255, 2)
     '''
     plt.imshow(contour_img, 'gray')
+    plt.title('max Contour')
     plt.show()
     #cv2.imshow("test", contour_img)
     #cv2.waitKey(0)
@@ -195,26 +202,35 @@ def palmPrintAlignment(img):
     max_contour = drawLargestContour(blured)
     # max_contour = max_contour.astype(np.uint8)
     # TODO choose two suitable columns and find 6 intersections with the finger's contour
-    x1 = 10
-    x2 = 14
-    serie1 = getFingerContourIntersections(max_contour, x1)
-    serie2 = getFingerContourIntersections(max_contour, x2)
+    x1 = 22
+    x2 = 30
+    series1 = getFingerContourIntersections(max_contour, x1)
+    series2 = getFingerContourIntersections(max_contour, x2)
+    intersection_img = np.zeros(max_contour.shape)
+    intersection_img = intersection_img + max_contour
+    intersection_img[:, x1] = 255
+    intersection_img[:, x2] = 255
+    plt.imshow(intersection_img, cmap='gray')
+    plt.title('line to check intersection possibilities')
+    plt.show()
 
     # TODO compute middle points from these contour intersections
-    middle_serie1 = np.zeros(3).astype(int)
-    middle_serie2 = np.zeros(3).astype(int)
+    middle_series1 = np.zeros(3).astype(int)
+    middle_series2 = np.zeros(3).astype(int)
+    print("??????: ", len(series1), len(series2))
     for i in range(3):
-        middle_serie1[i] = int((serie1[i*2] + serie1[i*2+1]) / 2)
-        middle_serie2[i] = int((serie2[i*2] + serie2[i*2+1]) / 2)
+        middle_series1[i] = int((series1[i*2] + series1[i*2+1]) / 2)
+        middle_series2[i] = int((series2[i*2] + series2[i*2+1]) / 2)
 
     # TODO extrapolate line to find k1-3
-    k1 = findKPoints(max_contour, middle_serie1[0], x1, middle_serie2[0], x2)
-    k2 = findKPoints(max_contour, middle_serie1[1], x1, middle_serie2[1], x2)
-    k3 = findKPoints(max_contour, middle_serie1[2], x1, middle_serie2[2], x2)
-    contourimg = drawCircle(max_contour, k1[1], k1[0])
-    contourimg = drawCircle(contourimg, k2[1], k2[0])
-    contourimg = drawCircle(contourimg, k3[1], k3[0])
-    plt.imshow(contourimg, cmap='gray')
+    k1 = findKPoints(max_contour, middle_series1[0], x1, middle_series2[0], x2)
+    k2 = findKPoints(max_contour, middle_series1[1], x1, middle_series2[1], x2)
+    k3 = findKPoints(max_contour, middle_series1[2], x1, middle_series2[2], x2)
+    contour_img = drawCircle(max_contour, k1[1], k1[0])
+    contour_img = drawCircle(contour_img, k2[1], k2[0])
+    contour_img = drawCircle(contour_img, k3[1], k3[0])
+    plt.imshow(contour_img, cmap='gray')
+    plt.title('Contour with intersection')
     plt.show()
 
     # TODO calculate Rotation matrix from coordinate system spanned by k1-3
