@@ -113,31 +113,6 @@ def findKPoints(img, y1, x1, y2, x2) -> tuple:
     :param x2: x-coordinate of point
     :return: intersection point k as a tuple (ky, kx)
     '''
-    """
-    # a*x1+b=y1, a*x2+b=y2 => a*(x1-x2)=)y1-y2 => a=(y1-y2)/(x1-x2), b=y1-a*x1
-    a = (y1 - y2) / (x1 - x2 + np.finfo(float).eps)
-    b = y1 - a * x1
-
-    # found = False
-    print(y1)
-    for y in range(y2 + 1, img.shape[0]):
-        x = int((y - b) / (a + np.finfo(float).eps))
-        if x >= img.shape[0] or x < 0:
-            break
-        if img[y, x] != img[y2, x2]:
-            # found = True
-            return tuple((y, x))
-    # if not found:
-    for y in range(y1-1, -1, -1):
-        x = int((y - b) / (a + np.finfo(float).eps))
-        if x >= img.shape[0] or x < 0:
-            break
-        if img[y, x] != img[y2, x2]:
-            # found = True
-            return tuple((y, x))
-    # if not found:
-    #    print("??????")
-    """
     if y1 == y2:
         # the same row
         for x in range(max(x1, x2), img.shape[1]):
@@ -156,26 +131,7 @@ def findKPoints(img, y1, x1, y2, x2) -> tuple:
         y = int(a * x + b)
         if img[y, x] == 255:
             return y, x
-    """
-    ky, kx = 0, 0
-    A = y2 - y1
-    B = x1 - x2
-    C = x2 * y1 - x1 * y2
-    # slope = y1 -y2 / (x1 - x2)
-    # t = y1 - slope * x1
-    a, b = np.shape(img)
-    for j in range(1, b - 1):
-        for i in range(1, a - 1):
-            if kx != 0 or ky != 0:
-                break
-            if A * j + B * i + C == 0:
-                if img[i, j] == 255:
-                    ky = i
-                    kx = j
 
-    print(ky, kx)
-    return ky, kx
-    """
 def getCoordinateTransform(k1, k2, k3) -> np.ndarray:
     '''
     Get a transform matrix to map points from old to new coordinate system defined by k1-3
