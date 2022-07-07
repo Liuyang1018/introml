@@ -71,8 +71,9 @@ def extractFanFeatures(magnitude_spectrum, k, sampling_steps) -> np.ndarray:
     features = np.zeros(k)
     b, a = magnitude_spectrum.shape
     for i in range(1, k + 1):
-        for theta in np.linspace(i-1, i, sampling_steps):
-            for r in range(0, int(min(a, b)/2)-1):  # Why min(a,b)/2-1, why -1 ????
+        split = np.linspace(i-1, i, sampling_steps)
+        for theta in split[:len(split)-1]:
+            for r in range(0, min(a, b)//2):
                 y, x = polarToKart(magnitude_spectrum.shape, r, theta * np.pi / k)
                 features[i-1] = features[i-1] + magnitude_spectrum[y, x]
     print(features)

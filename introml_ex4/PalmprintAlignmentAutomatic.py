@@ -37,12 +37,7 @@ def binarizeAndSmooth(img) -> np.ndarray:
     # Use a threshold alpha, to convert an original gray image into a binary map
     alpha = 115
     IBinaryMap = (img > alpha) * np.float64(255)
-    for i in range(IBinaryMap.shape[0]):
-        for j in range(IBinaryMap.shape[1]):
-            if IBinaryMap[i, j] != 0 and IBinaryMap[i, j] != 255:
-                print("BINARY WRONG!!!!!!")
-    print(type(img[0, 0]))
-    print(type(IBinaryMap[0, 0]))
+
     # Alternative: Use cv2.threshold() to create a mask with value {0, 255}
     # _, IBinaryMask = cv2.threshold(img, alpha-1, 255, cv2.THRESH_BINARY_INV)
 
@@ -62,10 +57,11 @@ def drawLargestContour(img) -> np.ndarray:
     plt.imshow(img, 'gray')
     plt.show()
     img = img.astype(np.uint8)
-    contours, _ = cv2.findContours(img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
+    contours, _ = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     contour_img = np.zeros(img.shape)
-    list(contours).sort(key=lambda c: cv2.arcLength(c, True), reverse=True)
-    cv2.drawContours(contour_img, contours, 0, 255, 2)
+    max_contour = max(contours, key=len)
+    cv2.drawContours(contour_img, max_contour, -1, 255, 2)
+
     '''
     # Alternative: use for-loop
     # Alternative: use contourArea() to find the largest contour
@@ -91,29 +87,20 @@ def getFingerContourIntersections(contour_img, x) -> np.ndarray:
     :param x: position of the image column to run along
     :return: y-values in np.ndarray in shape (6,)
     '''
-    y = []
-    is_image = False
-    before = 255
-    length_counter = 0
-    for i in range(len(contour_img)):
-        if contour_img[i, x] == 255 and contour_img[i, x] == before:  # white unchanged
-            if not is_image:  # check board
-                continue
-            else:  # in case not board, then it is contour
-                length_counter = length_counter + 1  # calculate the width of white
-        elif contour_img[i, x] == 0 and contour_img[i, x] != before: # from white to black
-            before = contour_img[i, x]
-            if not is_image:  # except board
-                continue
-            else:
-                y.append(i-(length_counter+1)//2)  # save the middle point in last white as y
-        elif contour_img[i, x] == 255 and contour_img[i, x] != before:  # from black to white
-            is_image = True
-            length_counter = 1
-            before = contour_img[i, x]
-        # in case black to black, do nothing
-
-    return np.array(y[:6])  # Q: really the first 6 ones should be chosen? what if the board is at the beginning???
+    y = np.zeros(6)
+    counter = -1
+    white_counter = 1  # calculate the width of white => helps to find the middle value
+    for i in range(1, len(contour_img)):
+        if contour_img[i, x] == 255 and contour_img[i-1, x] == 255:  # if white->white
+            white_counter = white_counter + 1
+        elif contour_img[i-1, x] == 0 and contour_img[i, x] == 255:  # if black->white
+            white_counter = 1  # reset white_counter
+        elif contour_img[i-1, x] == 255 and contour_img[i, x] == 0:  # if white->black
+            if (counter >= 0) and (counter <= 5):
+                y[counter] = i - 1 - white_counter // 2
+            counter = counter + 1  # calculate the times passing a white line
+        # else do nothing
+    return y
 
 
 def findKPoints(img, y1, x1, y2, x2) -> tuple:
@@ -126,15 +113,15 @@ def findKPoints(img, y1, x1, y2, x2) -> tuple:
     :param x2: x-coordinate of point
     :return: intersection point k as a tuple (ky, kx)
     '''
-
+    """
     # a*x1+b=y1, a*x2+b=y2 => a*(x1-x2)=)y1-y2 => a=(y1-y2)/(x1-x2), b=y1-a*x1
-    a = (y1 - y2) / (x1 - x2)
+    a = (y1 - y2) / (x1 - x2 + np.finfo(float).eps)
     b = y1 - a * x1
 
     # found = False
     print(y1)
     for y in range(y2 + 1, img.shape[0]):
-        x = int((y - b) / a)
+        x = int((y - b) / (a + np.finfo(float).eps))
         if x >= img.shape[0] or x < 0:
             break
         if img[y, x] != img[y2, x2]:
@@ -142,7 +129,7 @@ def findKPoints(img, y1, x1, y2, x2) -> tuple:
             return tuple((y, x))
     # if not found:
     for y in range(y1-1, -1, -1):
-        x = int((y - b) / a)
+        x = int((y - b) / (a + np.finfo(float).eps))
         if x >= img.shape[0] or x < 0:
             break
         if img[y, x] != img[y2, x2]:
@@ -150,8 +137,45 @@ def findKPoints(img, y1, x1, y2, x2) -> tuple:
             return tuple((y, x))
     # if not found:
     #    print("??????")
+    """
+    if y1 == y2:
+        # the same row
+        for x in range(max(x1, x2), img.shape[1]):
+            if img[y1, x] == 255:
+                return y1, x
+    if x1 == x2:
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        # the same colum
+        for y in range(max(y1, y2), img.shape[0]):
+            if img[y, x1] == 255:
+                return y, x1
+    # y1 = a * x1 + b, y2 = a * x2 + b => y1 - y2 = a * (x1 - x2)
+    a = (y1 - y2) / (x1 - x2)
+    b = y1 - a * x1
+    for x in range(max(x1, x2), img.shape[1]):
+        y = int(a * x + b)
+        if img[y, x] == 255:
+            return y, x
+    """
+    ky, kx = 0, 0
+    A = y2 - y1
+    B = x1 - x2
+    C = x2 * y1 - x1 * y2
+    # slope = y1 -y2 / (x1 - x2)
+    # t = y1 - slope * x1
+    a, b = np.shape(img)
+    for j in range(1, b - 1):
+        for i in range(1, a - 1):
+            if kx != 0 or ky != 0:
+                break
+            if A * j + B * i + C == 0:
+                if img[i, j] == 255:
+                    ky = i
+                    kx = j
 
-
+    print(ky, kx)
+    return ky, kx
+    """
 def getCoordinateTransform(k1, k2, k3) -> np.ndarray:
     '''
     Get a transform matrix to map points from old to new coordinate system defined by k1-3
@@ -202,7 +226,7 @@ def palmPrintAlignment(img):
     max_contour = drawLargestContour(blured)
     # max_contour = max_contour.astype(np.uint8)
     # TODO choose two suitable columns and find 6 intersections with the finger's contour
-    x1 = 22
+    x1 = 10
     x2 = 30
     series1 = getFingerContourIntersections(max_contour, x1)
     series2 = getFingerContourIntersections(max_contour, x2)
@@ -219,8 +243,8 @@ def palmPrintAlignment(img):
     middle_series2 = np.zeros(3).astype(int)
     print("??????: ", len(series1), len(series2))
     for i in range(3):
-        middle_series1[i] = int((series1[i*2] + series1[i*2+1]) / 2)
-        middle_series2[i] = int((series2[i*2] + series2[i*2+1]) / 2)
+        middle_series1[i] = (series1[i*2] + series1[i*2+1]) // 2
+        middle_series2[i] = (series2[i*2] + series2[i*2+1]) // 2
 
     # TODO extrapolate line to find k1-3
     k1 = findKPoints(max_contour, middle_series1[0], x1, middle_series2[0], x2)

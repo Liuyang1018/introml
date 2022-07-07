@@ -35,3 +35,4 @@ def calculate_Theta_Distance(Thetax, Thetay):
     lyy = np.sum(yy ** 2)
     DThetaxy = (1 - lxy * lxy / (lxx * lyy)) * 100
     return DThetaxy
+
